@@ -9,7 +9,11 @@ import org.litepal.crud.DataSupport;
 public class City extends DataSupport {
 
     private int id;
+    //cityName记录市的名字
     private String cityName;
+    //cityCode记录市的代号
+    private int cityCode;
+    //provinceId记录当前市所属省的id值
     private int provinceId;
 
     public int getId() {
@@ -24,6 +28,10 @@ public class City extends DataSupport {
         return provinceId;
     }
 
+    public int getCityCode() {
+        return cityCode;
+    }
+
     public void setId(int id) {
         this.id = id;
     }
@@ -34,5 +42,9 @@ public class City extends DataSupport {
 
     public void setProvinceId(int provinceId) {
         this.provinceId = provinceId;
+    }
+
+    public void setCityCode(int cityCode) {
+        this.cityCode = cityCode;
     }
 }
