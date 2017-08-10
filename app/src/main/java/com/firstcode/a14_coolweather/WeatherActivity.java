@@ -5,9 +5,13 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -40,6 +44,9 @@ public class WeatherActivity extends AppCompatActivity {
     public TextView carWashText;
     public TextView sportText;
     public ImageView bingPicImg;
+    public SwipeRefreshLayout swipeRefresh;
+    public DrawerLayout drawerLayout;
+    public Button navButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,8 +56,7 @@ public class WeatherActivity extends AppCompatActivity {
             //调用了getWindow() .getDecorView()方法拿到当前活动的DecorView
             View decorView = getWindow().getDecorView();
             //调用它的setSystemUiVisibility()方法来改变系统UI的显示
-            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN|View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-            getWindow().setStatusBarColor(Color.TRANSPARENT);
+            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN|View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
             getWindow().setStatusBarColor(Color.TRANSPARENT);
         }
 
@@ -73,22 +79,46 @@ public class WeatherActivity extends AppCompatActivity {
         //加载背景图片控件:
         bingPicImg = ((ImageView) findViewById(R.id.bing_pic_img));
 
+        swipeRefresh = ((SwipeRefreshLayout) findViewById(R.id.swipe_refresh));
+        swipeRefresh.setColorSchemeResources(R.color.colorPrimary);
+
+        //获取到新增的DrawerLayout和Button的实例:
+        drawerLayout = ((DrawerLayout) findViewById(R.id.drawer_layout));
+        navButton = ((Button) findViewById(R.id.nav_button));
+
         //尝试从本地缓存中读取天气数据
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         String weatherString = prefs.getString("weather", null);
+        final String weatherId;
         if (weatherString != null){
             //有缓存时直接解析天气数据:
             Weather weather = Utility.handleWeatherResponse(weatherString);
+            weatherId = weather.basic.weatherId;
             showWeatherInfo(weather);
         }else{
             //无缓存时服务器查询天气:
             //从Intent中取出天气id
-            String weatherId = getIntent().getStringExtra("weather_id");
+            weatherId = getIntent().getStringExtra("weather_id");
             //将ScrollView进行隐藏
             weatherLayout.setVisibility(View.INVISIBLE);
             //调用requestWeather()方法来从服务器请求天气数据
             requestWeather(weatherId);
         }
+
+        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                requestWeather(weatherId);
+            }
+        });
+
+        navButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                //在Button的点击事件中调用DrawerLayout的openDrawer()方法来打开滑动菜单
+                drawerLayout.openDrawer(GravityCompat.START);
+            }
+        });
 
         String bingPic = prefs.getString("bing_pic", null);
         if (bingPic != null){
@@ -96,7 +126,6 @@ public class WeatherActivity extends AppCompatActivity {
         }else{
             loadBingPic();
         }
-
 
     }
 
@@ -132,6 +161,7 @@ public class WeatherActivity extends AppCompatActivity {
                         }else{
                             Toast.makeText(WeatherActivity.this,"获取天气信息失败",Toast.LENGTH_SHORT).show();
                         }
+                        swipeRefresh.setRefreshing(false);
                     }
                 });
             }
@@ -143,6 +173,7 @@ public class WeatherActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         Toast.makeText(WeatherActivity.this,"获取天气信息失败",Toast.LENGTH_SHORT).show();
+                        swipeRefresh.setRefreshing(false);
                     }
                 });
 

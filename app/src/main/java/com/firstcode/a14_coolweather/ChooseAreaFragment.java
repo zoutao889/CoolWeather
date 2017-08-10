@@ -97,12 +97,22 @@ public class ChooseAreaFragment extends Fragment {
                     queryCounties();
                 }else if (currentLevel == LEVEL_COUNTY){
                     //如果当前级别是LEVEL_COUNTY，就启动WeatherAaivity
-                    //并把当前选中县盼天气id传递过去
+                    //并把当前选中县天气id传递过去
                     String weatherId = countyList.get(position).getWeatherId();
-                    Intent intent = new Intent(getActivity(),WeatherActivity.class);
-                    intent.putExtra("weather_id",weatherId);
-                    startActivity(intent);
-                    getActivity().finish();
+                    if (getActivity() instanceof MainActivity){
+                        Intent intent = new Intent(getActivity(),WeatherActivity.class);
+                        intent.putExtra("weather_id",weatherId);
+                        startActivity(intent);
+                        getActivity().finish();
+                    }else if (getActivity() instanceof WeatherActivity){
+                        WeatherActivity activity = (WeatherActivity) getActivity();
+                        //关闭滑动菜单:
+                        activity.drawerLayout.closeDrawers();
+                        //显示下拉刷新进度条:
+                        activity.swipeRefresh.setRefreshing(true);
+                        //显示新城市天气信息:
+                        activity.requestWeather(weatherId);
+                    }
                 }
             }
         });
